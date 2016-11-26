@@ -22,3 +22,13 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# Go structure and downloadeble files 
+bin/
+pkg/
+.vscode
+src/github.com/
+src/golang.org/
+src/gopkg.in/
+src/sourcegraph.com/
+src/eugenesokolov/user/hello/debug
