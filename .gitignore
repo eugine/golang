@@ -32,3 +32,7 @@ src/golang.org/
 src/gopkg.in/
 src/sourcegraph.com/
 src/eugenesokolov/user/hello/debug
+
+# idea:
+.idea/
+*.iml
