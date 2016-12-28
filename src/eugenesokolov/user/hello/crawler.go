@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 type FetchResult struct {
-	url string 
+	url  string
 	body string
 	urls []string
 	err  error
@@ -21,22 +21,12 @@ func Crawl(url string, depth int, fetcher Fetcher) map[string]FetchResult {
 	fetchedResults := make(map[string]FetchResult)
 	urls := []string{url}
 	for i := depth; i > 0; i-- {
-		onlyNewUrls := []string{}
-		for _, u := range urls {
-			if _, ok := fetchedResults[u]; !ok {
-				onlyNewUrls = append(onlyNewUrls, u)
-			}
-		}
-		chans := []chan FetchResult{}
-		for _, u := range onlyNewUrls {
-			ch := make(chan FetchResult)
-			go fetch(u, fetcher, ch)
-			chans = append(chans, ch)
-		}
+		onlyNewUrls := onlyNewUrls(fetchedResults, urls)
+		chans := submitFetchingUrls(onlyNewUrls)
 
-		urls = []string{}
+		urls = nil
 		for _, ch := range chans {
-			result := <- ch
+			result := <-ch
 			fetchedResults[result.url] = result
 			for _, u := range result.urls {
 				urls = append(urls, u)
@@ -47,6 +37,26 @@ func Crawl(url string, depth int, fetcher Fetcher) map[string]FetchResult {
 		}
 	}
 	return fetchedResults
+}
+
+func onlyNewUrls(fetchedResults map[string]FetchResult, urls []string) []string {
+	onlyNewUrls := []string{}
+	for _, u := range urls {
+		if _, ok := fetchedResults[u]; !ok {
+			onlyNewUrls = append(onlyNewUrls, u)
+		}
+	}
+	return onlyNewUrls
+}
+
+func submitFetchingUrls(urls []string) []chan FetchResult {
+	chans := []chan FetchResult{}
+	for _, u := range urls {
+		ch := make(chan FetchResult)
+		go fetch(u, fetcher, ch)
+		chans = append(chans, ch)
+	}
+	return chans
 }
 
 func fetch(url string, fetcher Fetcher, ch chan FetchResult) {
@@ -63,7 +73,6 @@ func main() {
 		} else {
 			fmt.Printf("ERROR: %v\n", res.err)
 		}
-		
 	}
 }
 
