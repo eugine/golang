@@ -7,12 +7,11 @@ import (
 )
 
 func main()  {
-    counts := make(map[string]int)
-    names := make(map[string][]string)
+    keyProFileCount := make(map[string]map[string]int)
 
     files := os.Args[1:]
     if (len(files) == 0) {
-        countLines(os.Stdin, counts, names)
+        countLines(os.Stdin, keyProFileCount)
     } else {
         for _, arg := range files {
             f, err := os.Open(arg)
@@ -20,21 +19,31 @@ func main()  {
                 fmt.Fprintf(os.Stderr, "dup2: %v\n", err)
                 continue
             }
-            countLines(f, counts, names)
+            countLines(f, keyProFileCount)
             f.Close()
         }
-        for line, n := range counts {
-            if n > 1 {
-                fmt.Printf("%d\t%s\t%s\n", n, line, names[line])
+        for key, fileCount := range keyProFileCount {
+            totalCount := 0
+            files := make([]string, len(fileCount))
+            for file, count := range fileCount {
+                totalCount += count
+                files = append(files, file)
+            } 
+            if totalCount > 1 {
+                 fmt.Printf("%d\t%s\t%s\n", totalCount, key, files)
             }
         }
     }
 }
 
-func countLines(f *os.File, counts map[string]int, names map[string][]string)  {
+func countLines(f *os.File, keyProFileCount map[string]map[string]int)  {
     input := bufio.NewScanner(f)
     for input.Scan() {
-        counts[input.Text()]++
-        names[input.Text()] = append(names[input.Text()], f.Name())
+        fileCount := keyProFileCount[input.Text()]
+        if (fileCount == nil) {
+            fileCount = make(map[string]int)
+            keyProFileCount[input.Text()] = fileCount
+        }
+        fileCount[f.Name()]++
     }
 }
